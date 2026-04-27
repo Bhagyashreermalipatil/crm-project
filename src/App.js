@@ -1,40 +1,10 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = "https://crm-backend-le4t.onrender.com";
-
-function App() {
-  const [leads, setLeads] = useState([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [search, setSearch] = useState("");
-
-  const fetchLeads = async () => {
-    try {
-      const res = await axios.get(`${API}/leads`);
-      setLeads(res.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  const addLead = async () => {
-    if (!name || !email) return;
-
-    await axios.post(`${API}/leads`, { name, email });
-    setName("");
-    setEmail("");
-    fetchLeads();
-  };
-
-  const deleteLead = async (index) => {
-    await axios.delete(`${API}/leads/${index}`);
-    fetchLeads();
-  };
+import React, { useState, useEffect } from "react";
+        <input placeholder="Username" onChange={(e) => setUsername(e.target.value)} />
+        <input placeholder="Password" type="password" onChange={(e) => setPassword(e.target.value)} />
+        <button onClick={login}>Login</button>
+      </div>
+    );
+  }
 
   const filteredLeads = leads.filter(
     (lead) =>
@@ -43,144 +13,79 @@ function App() {
   );
 
   return (
-    <div style={styles.app}>
-      <aside style={styles.sidebar}>
-        <h2>CRM Panel</h2>
-        <p>Total Leads: {leads.length}</p>
-      </aside>
+    <div style={{ padding: 20 }}>
+      <h1>Advanced CRM Dashboard</h1>
+      <p>Role: {role}</p>
 
-      <main style={styles.main}>
-        <h1 style={styles.title}>Lead Management Dashboard</h1>
-
-        <div style={styles.form}>
-          <input
-            style={styles.input}
-            placeholder="Enter Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          <input
-            style={styles.input}
-            placeholder="Enter Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <button style={styles.addBtn} onClick={addLead}>
-            Add Lead
-          </button>
+      {dashboard && (
+        <div>
+          <h3>Total Leads: {dashboard.totalLeads}</h3>
+          <p>Conversion Rate: {dashboard.conversionRate}%</p>
+          <p>
+            New: {dashboard.stages.New} | Contacted: {dashboard.stages.Contacted} |
+            Qualified: {dashboard.stages.Qualified} | Closed: {dashboard.stages.Closed}
+          </p>
         </div>
+      )}
 
-        <input
-          style={styles.search}
-          placeholder="Search leads..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div>
+        <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <select value={stage} onChange={(e) => setStage(e.target.value)}>
+          <option>New</option>
+          <option>Contacted</option>
+          <option>Qualified</option>
+          <option>Closed</option>
+        </select>
+        <button onClick={addLead}>Add Lead</button>
+      </div>
 
-        <div style={styles.cards}>
-          {filteredLeads.map((lead, index) => (
-            <div key={index} style={styles.card}>
+      <input
+        placeholder="Search leads"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      <div>
+        {filteredLeads.map((lead, index) => (
+          <div key={index} style={{ border: "1px solid #ccc", padding: 10, margin: 10 }}>
+            <h3>{lead.name}</h3>
+            <p>{lead.email}</p>
+
+            <select
+              value={lead.stage}
+              onChange={(e) => updateStage(index, e.target.value)}
+            >
+              <option>New</option>
+              <option>Contacted</option>
+              <option>Qualified</option>
+              <option>Closed</option>
+            </select>
+
+            <button onClick={() => deleteLead(index)}>Delete</button>
+            <button onClick={() => setSelectedLead(index)}>View Activity</button>
+
+            {selectedLead === index && (
               <div>
-                <h3>{lead.name}</h3>
-                <p>{lead.email}</p>
+                <h4>Activity Log</h4>
+                {lead.activityLog.map((log, i) => (
+                  <p key={i}>
+                    {log.type}: {log.message} ({new Date(log.date).toLocaleString()})
+                  </p>
+                ))}
+                <input
+                  placeholder="Add activity"
+                  value={activityMessage}
+                  onChange={(e) => setActivityMessage(e.target.value)}
+                />
+                <button onClick={() => addActivity(index)}>Log Activity</button>
               </div>
-
-              <button
-                style={styles.deleteBtn}
-                onClick={() => deleteLead(index)}
-              >
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
-      </main>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
-
-const styles = {
-  app: {
-    display: "flex",
-    minHeight: "100vh",
-    fontFamily: "Arial, sans-serif",
-    background: "#f4f7fb",
-  },
-
-  sidebar: {
-    width: "220px",
-    background: "#1f2937",
-    color: "white",
-    padding: "30px 20px",
-  },
-
-  main: {
-    flex: 1,
-    padding: "30px",
-  },
-
-  title: {
-    marginBottom: "20px",
-  },
-
-  form: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap",
-    marginBottom: "20px",
-  },
-
-  input: {
-    padding: "10px",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-    flex: "1",
-    minWidth: "180px",
-  },
-
-  addBtn: {
-    padding: "10px 20px",
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-
-  search: {
-    width: "100%",
-    padding: "10px",
-    marginBottom: "20px",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-  },
-
-  cards: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-    gap: "20px",
-  },
-
-  card: {
-    background: "white",
-    padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  deleteBtn: {
-    background: "#dc2626",
-    color: "white",
-    border: "none",
-    padding: "8px 12px",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-};
 
 export default App;
